@@ -3,8 +3,8 @@ package rahulstech.swing.calculator.parser;
 import rahulstech.swing.calculator.parser.operation.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +56,7 @@ public class Calculator {
         names.remove(name);
     }
 
-    public BigDecimal calculate(String expression) {
+    public BigDecimal calculate(String expression) throws CalculatorException {
         Tokenizer tokenizer = new Tokenizer(expression);
         this.tokens = tokenizer.tokenize();
         this.tokenCount = tokens.size();
@@ -97,7 +97,7 @@ public class Calculator {
         registerOperation(new BinaryOperator("*", Operation.Priority.MULTIPLICATIVE) {
             @Override
             public BigDecimal evaluate(BigDecimal left, BigDecimal right) {
-                return left.multiply(right);
+                return left.multiply(right,MathContext.DECIMAL128);
             }
         });
         registerOperation(new BinaryOperator("/", Operation.Priority.MULTIPLICATIVE) {
@@ -106,7 +106,7 @@ public class Calculator {
                 if (0 == right.compareTo(BigDecimal.ZERO)) {
                     throw new OperationException("can not divide with 0");
                 }
-                return left.divide(right);
+                return left.divide(right,MathContext.DECIMAL128);
             }
         });
         registerOperation(new BinaryOperator("^", Operation.Priority.MULTIPLICATIVE) {
@@ -116,7 +116,14 @@ public class Calculator {
                 if (0 == power && 0 == left.compareTo(BigDecimal.ZERO)) {
                     throw new OperationException("0 to the power 0 is not valid");
                 }
-                return left.pow(power);
+                return left.pow(power,MathContext.DECIMAL128);
+            }
+        });
+        registerOperation(new BinaryOperator("%", Operation.Priority.MULTIPLICATIVE) {
+            @Override
+            public BigDecimal evaluate(BigDecimal left, BigDecimal right) {
+                return left.multiply(right,MathContext.DECIMAL128)
+                        .divide(new BigDecimal(100),MathContext.DECIMAL128);
             }
         });
     }
@@ -128,7 +135,30 @@ public class Calculator {
                 if (-1 == param.signum()) {
                     throw new OperationException("can not calculate square root of a negative number");
                 }
-                return param.sqrt(new MathContext(20, RoundingMode.HALF_EVEN));
+                return param.sqrt(MathContext.DECIMAL128);
+            }
+        });
+        registerOperation(new BiFunction("REMAINDER",MULTIPLICATIVE) {
+            @Override
+            protected BigDecimal evaluate(BigDecimal param1, BigDecimal param2) {
+                if (param2.equals(BigDecimal.ZERO)) {
+                    throw new OperationException("can not divide by zero");
+                }
+                return param1.remainder(param2);
+            }
+        });
+        registerOperation(new AbstractParameterizedOperation("AVG",ADDITIVE) {
+            @Override
+            public BigDecimal evaluate() {
+                List<BigDecimal> params = parameters();
+                if (null == params || params.size() < 2) {
+                    throw new OperationException("average function requires at least 2 parameters");
+                }
+                BigDecimal sum = BigDecimal.ZERO;
+                for (BigDecimal n : params) {
+                    sum = sum.add(n);
+                }
+                return sum.divide(new BigDecimal(params.size()),MathContext.DECIMAL128);
             }
         });
     }
@@ -174,7 +204,17 @@ public class Calculator {
     }
 
     BigDecimal parseBaseOperation() throws ParseException {
-        if (check(NUMERIC)) {
+        if (check("+",NUMERIC) || check("-",NUMERIC)) {
+            Token sign = pop();
+            BigDecimal number = new BigDecimal(pop().literal());
+            if (sign.literal().equals("+")) {
+                return number;
+            }
+            else {
+                return number.negate();
+            }
+        }
+        else if (check(NUMERIC)) {
             Token token = pop();
             String literal = token.literal();
             return new BigDecimal(literal);
@@ -190,12 +230,25 @@ public class Calculator {
                     advance();
                 }
             }
+            if (!check(")")) {
+                throw new ParseException("expected )");
+            }
             advance(); // for ')'
-            return createFunction(name.literal(),parameters).evaluate();
+            Operation operation = createFunction(name.literal(),parameters);
+            return operation.evaluate();
         }
         else if (check(KEYWORD)) {
             Token name = pop();
             return createConstantOperation(name.literal()).evaluate();
+        }
+        else if (check("(")) {
+            advance();
+            BigDecimal result = parseOperation();
+            if (!check(")")) {
+                throw new ParseException("expected )");
+            }
+            advance();
+            return result;
         }
         else {
             throw new ParseException("unexpected token "+peek(0));
@@ -249,27 +302,25 @@ public class Calculator {
     }
 
     private BinaryOperator createBinaryOperator(String name, BigDecimal left, BigDecimal right) {
-        if (!operations.containsKey(name)) {
-            throw new OperationException("no binary operator found with name \""+name+"\"");
-        }
-        BinaryOperator operation = (BinaryOperator) operations.get(name);
+        BinaryOperator operation = getOrThrow(name);
         operation.parameters(left,right);
         return operation;
     }
 
     private ParameterizedOperation createFunction(String name, List<BigDecimal> parameters) {
-        if (!operations.containsKey(name)) {
-            throw new OperationException("no function found with name \""+name+"\"");
-        }
-        ParameterizedOperation operation = (ParameterizedOperation) operations.get(name);
+        ParameterizedOperation operation = getOrThrow(name);
         operation.parameters(parameters);
         return operation;
     }
 
     private Operation createConstantOperation(String name) {
+        return getOrThrow(name);
+    }
+
+    private <O extends Operation> O getOrThrow(String name) throws OperationException {
         if (!operations.containsKey(name)) {
-            throw new OperationException("no constant found with name \""+name+"\"");
+            throw new OperationException("Operation \""+name+"\" not implemented");
         }
-        return operations.get(name);
+        return (O) operations.get(name);
     }
 }

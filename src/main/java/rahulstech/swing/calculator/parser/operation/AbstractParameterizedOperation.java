@@ -20,4 +20,9 @@ public abstract class AbstractParameterizedOperation extends AbstractOperation i
     public void parameters(List<BigDecimal> parameters) {
         this.parameters = parameters;
     }
+
+    @Override
+    public String toString() {
+        return name()+"[priority="+priority()+", params="+parameters+"]";
+    }
 }
