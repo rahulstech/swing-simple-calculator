@@ -7,10 +7,7 @@ public class HistoryEntry {
     private String expression;
     private BigDecimal result;
 
-    public HistoryEntry(String expression, BigDecimal result) {
-        this.expression = expression;
-        this.result = result;
-    }
+    public HistoryEntry() {}
 
     public String getExpression() {
         return expression;
@@ -26,5 +23,13 @@ public class HistoryEntry {
 
     public void setResult(BigDecimal result) {
         this.result = result;
+    }
+
+    @Override
+    public String toString() {
+        return "<html>" +
+                "<br/><b>"+expression+"</b> " +
+                "<br/> &#61; <i>"+result+"</i>" +
+                "<br/></html>";
     }
 }

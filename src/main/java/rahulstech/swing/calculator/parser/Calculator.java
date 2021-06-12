@@ -61,7 +61,9 @@ public class Calculator {
         this.tokens = tokenizer.tokenize();
         this.tokenCount = tokens.size();
         this.index = 0;
-        return parseOperation();
+        BigDecimal result = parseOperation();
+        this.lastResult = result;
+        return result;
     }
 
     private void registerDefaultOperations() {
@@ -166,11 +168,11 @@ public class Calculator {
     BigDecimal parseAdditiveOperation() throws ParseException {
         BigDecimal left = parseMultiplicativeOperation();
         List<String> names = priorityOperationNames.get(ADDITIVE);
-        if (!hasNextToken() || !names.contains(peek(0).literal())){
+        if (!hasToken(1) || !names.contains(peek(0).literal())){
             return left;
         }
         BigDecimal root = null;
-        while (hasNextToken() && names.contains(peek(0).literal())) {
+        while (hasToken(1) && names.contains(peek(0).literal())) {
             Token operator = pop();
             BigDecimal right = parseMultiplicativeOperation();
             BigDecimal result = createBinaryOperator(operator.literal(),left,right).evaluate();
@@ -185,9 +187,9 @@ public class Calculator {
     BigDecimal parseMultiplicativeOperation() throws ParseException {
         BigDecimal left = parseBaseOperation();
         List<String> names = priorityOperationNames.get(MULTIPLICATIVE);
-        if (!hasNextToken() || !names.contains(peek(0).literal())) return left;
+        if (!hasToken(1) || !names.contains(peek(0).literal())) return left;
         BigDecimal root = null;
-        while (hasNextToken() && names.contains(peek(0).literal())) {
+        while (hasToken(1) && names.contains(peek(0).literal())) {
             Token operator = pop();
             BigDecimal right = parseBaseOperation();
             BigDecimal result = createBinaryOperator(operator.literal(),left,right).evaluate();
@@ -254,6 +256,7 @@ public class Calculator {
     private boolean check(Object... tokenTypeOrLiteral) {
         int offset = 0;
         for (Object o : tokenTypeOrLiteral) {
+            if (!hasToken(offset)) return false;
             Token token = peek(offset);
             if (o instanceof TokenType) {
                 TokenType type = (TokenType) o;
@@ -270,14 +273,14 @@ public class Calculator {
         return true;
     }
 
-    private boolean hasNextToken() {
-        return index+1 < tokenCount;
+    private boolean hasToken(int offset) {
+        return index+offset < tokenCount;
     }
 
     private Token peek(int offset) {
         int at = index+offset;
         if (at >= tokenCount) {
-            throw new IndexOutOfBoundsException("available tokens count "+tokens.size()+
+            throw new IndexOutOfBoundsException("available tokens count "+tokenCount+
                     "; but requested token @ "+at);
         }
         return tokens.get(at);
@@ -307,10 +310,6 @@ public class Calculator {
         ParameterizedOperation operation = getOrThrow(name);
         operation.parameters(parameters);
         return operation;
-    }
-
-    private Operation createConstantOperation(String name) {
-        return getOrThrow(name);
     }
 
     private <O extends Operation> O getOrThrow(String name) throws OperationException {
