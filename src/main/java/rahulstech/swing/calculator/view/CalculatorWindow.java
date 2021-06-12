@@ -1,15 +1,20 @@
 package rahulstech.swing.calculator.view;
 
+import com.sun.tools.javac.Main;
 import rahulstech.swing.calculator.history.HistoryEntry;
 import rahulstech.swing.calculator.history.HistoryStorage;
 import rahulstech.swing.calculator.parser.Calculator;
 import rahulstech.swing.calculator.parser.CalculatorException;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 
 /**
@@ -307,7 +312,7 @@ public class CalculatorWindow extends javax.swing.JFrame {
             }
         });
 
-        btnAverage.setFont(btnAverage.getFont().deriveFont(btnAverage.getFont().getStyle() | java.awt.Font.BOLD, 12));
+        btnAverage.setFont(btnAverage.getFont().deriveFont(btnAverage.getFont().getStyle() | java.awt.Font.BOLD, 10));
         btnAverage.setText("AVG");
         btnAverage.setPreferredSize(new java.awt.Dimension(40, 40));
         btnAverage.addActionListener(new java.awt.event.ActionListener() {
@@ -316,7 +321,7 @@ public class CalculatorWindow extends javax.swing.JFrame {
             }
         });
 
-        btnRemainder.setFont(btnRemainder.getFont().deriveFont(btnRemainder.getFont().getStyle() | java.awt.Font.BOLD, 12));
+        btnRemainder.setFont(btnRemainder.getFont().deriveFont(btnRemainder.getFont().getStyle() | java.awt.Font.BOLD, 10));
         btnRemainder.setText("REMAINDER");
         btnRemainder.setPreferredSize(new java.awt.Dimension(60, 40));
         btnRemainder.addActionListener(new java.awt.event.ActionListener() {
@@ -504,6 +509,10 @@ public class CalculatorWindow extends javax.swing.JFrame {
             public void keyReleased(KeyEvent e) { e.consume(); }
         });
         HistoryStorage.loadHistory();
+        Font font = loadFont(Font.TRUETYPE_FONT,"LcdSolid-VPzB.ttf");
+        if (null != font) {
+            expressionInput.setFont(font.deriveFont(18f));
+        }
     }
 
     private void onClickBtn(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onClickBtn
@@ -670,7 +679,23 @@ public class CalculatorWindow extends javax.swing.JFrame {
         result.setText(entry.getResult().toString());
     }
 
+    public static Font loadFont(int format, String file) {
+        try {
+            InputStream in = ClassLoader.getSystemResourceAsStream(file);
+            Font font = Font.createFont(format,in);
+            return font;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static void main(String args[]) {
+        Font font = loadFont(Font.TRUETYPE_FONT,"DancingScript-Bold.ttf");
+        if (null != font) {
+            UIManager.put("Button.font",font.deriveFont(Font.BOLD,24));
+        }
         new CalculatorWindow().setVisible(true);
     }
 

@@ -622,7 +622,7 @@
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.editors2.FontEditor">
               <FontInfo relative="true">
-                <Font bold="true" component="btnAverage" property="font" relativeSize="false" size="12"/>
+                <Font bold="true" component="btnAverage" property="font" relativeSize="false" size="10"/>
               </FontInfo>
             </Property>
             <Property name="text" type="java.lang.String" value="AVG"/>
@@ -638,7 +638,7 @@
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.modules.form.editors2.FontEditor">
               <FontInfo relative="true">
-                <Font bold="true" component="btnRemainder" property="font" relativeSize="false" size="12"/>
+                <Font bold="true" component="btnRemainder" property="font" relativeSize="false" size="10"/>
               </FontInfo>
             </Property>
             <Property name="text" type="java.lang.String" value="REMAINDER"/>
