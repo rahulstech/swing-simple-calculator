@@ -11,7 +11,7 @@ public abstract class BiFunction extends AbstractParameterizedOperation {
 
     @Override
     public void parameters(List<BigDecimal> parameters) {
-        if (null == parameters || parameters.size() > 1) {
+        if (null == parameters || parameters.size() > 2) {
             throw new OperationException(name()+" requires exactly two parameter");
         }
         super.parameters(parameters);

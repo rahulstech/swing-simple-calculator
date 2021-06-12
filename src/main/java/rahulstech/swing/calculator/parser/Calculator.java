@@ -3,7 +3,6 @@ package rahulstech.swing.calculator.parser;
 import rahulstech.swing.calculator.parser.operation.*;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ public class Calculator {
     private List<Token> tokens = null;
     private int tokenCount = 0;
     private int index;
+    private BigDecimal lastResult = BigDecimal.ZERO;
 
     public Calculator() {
         registerDefaultOperations();
@@ -60,6 +60,7 @@ public class Calculator {
         Tokenizer tokenizer = new Tokenizer(expression);
         this.tokens = tokenizer.tokenize();
         this.tokenCount = tokens.size();
+        this.index = 0;
         return parseOperation();
     }
 
@@ -68,14 +69,9 @@ public class Calculator {
         priorityOperationNames.put(Operation.Priority.MULTIPLICATIVE,new ArrayList<>());
         priorityOperationNames.put(Operation.Priority.NONE,new ArrayList<>());
 
-        registerDefaultConstants();
         registerDefaultAdditiveOperators();
         registerDefaultMultiplicativeOperators();
         registerDefaultFunctions();
-    }
-
-    private void registerDefaultConstants() {
-
     }
 
     private void registerDefaultAdditiveOperators() {
@@ -237,9 +233,9 @@ public class Calculator {
             Operation operation = createFunction(name.literal(),parameters);
             return operation.evaluate();
         }
-        else if (check(KEYWORD)) {
-            Token name = pop();
-            return createConstantOperation(name.literal()).evaluate();
+        else if (check("ANS")) {
+            advance();
+            return lastResult;
         }
         else if (check("(")) {
             advance();
