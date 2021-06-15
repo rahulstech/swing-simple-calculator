@@ -1,6 +1,20 @@
+/**
+ * Copyright 2021 rahulstech
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rahulstech.swing.calculator.view;
 
-import com.sun.tools.javac.Main;
 import rahulstech.swing.calculator.history.HistoryEntry;
 import rahulstech.swing.calculator.history.HistoryStorage;
 import rahulstech.swing.calculator.parser.Calculator;
@@ -12,12 +26,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 
 /**
+ * Main Calculator Screen
+ *
  * @author Rahul Bagchi
  */
 public class CalculatorWindow extends javax.swing.JFrame {
@@ -29,6 +43,10 @@ public class CalculatorWindow extends javax.swing.JFrame {
      * Creates new form CalculatorWindow
      */
     public CalculatorWindow() {
+        Font font = loadFont(Font.TRUETYPE_FONT,"DancingScript-Bold.ttf");
+        if (null != font) {
+            UIManager.put("Button.font",font.deriveFont(Font.BOLD,24));
+        }
         initComponents();
         this.calculator = new Calculator();
         onPostInit();
@@ -491,7 +509,12 @@ public class CalculatorWindow extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * Perform modifications after GUI initialization
+     */
     private void onPostInit() {
+        // keyboard in not allowed for exampleInput JTextField
+        // only input using the calculator button is allowed
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -515,6 +538,9 @@ public class CalculatorWindow extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Handles calculator button click
+     */
     private void onClickBtn(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onClickBtn
         final Object which = evt.getSource();
         if (btn0 == which) {
@@ -603,12 +629,23 @@ public class CalculatorWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_onClickBtn
 
+    /**
+     * Show the history window
+     */
     private void onClickHistory(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onClickHistory
         HistoryWindow historyWindow = new HistoryWindow();
         historyWindow.setOnChooseHistoryEntryListener(entry -> onChooseFromHistory(entry));
         historyWindow.setVisible(true);
     }//GEN-LAST:event_onClickHistory
 
+    /**
+     * Adds text to the expression input field. If more than
+     * one charatcer is selected then it will replace those with
+     * the new one otherwise it will add the new text after the
+     * current position of the cursor
+     *
+     * @param text the new text to add
+     */
     private void appendText(String text) {
         if (showingPlaceholder) {
             expressionInput.setText(null);
@@ -629,12 +666,22 @@ public class CalculatorWindow extends javax.swing.JFrame {
         showingPlaceholder = false;
     }
 
+    /**
+     * Clear the input expression and the last result from the
+     * screen
+     */
     private void clear() {
         expressionInput.setText("0");
         result.setText(null);
         showingPlaceholder = true;
     }
 
+    /**
+     * Handles backspace button press. If more than one character
+     * is selected then backspace will clear then all. If nothing
+     * is seleted and the cursor is not at postion '0' then it will
+     * delete a single character just before the cursor
+     */
     private void backspace() {
         if (showingPlaceholder) {
             return;
@@ -655,6 +702,10 @@ public class CalculatorWindow extends javax.swing.JFrame {
         showingPlaceholder = false;
     }
 
+    /**
+     * Performs the calculation and out the result. If any
+     * error occures then it will show the error as a pop up.
+     */
     private void calculate() {
         String expression = expressionInput.getText();
         if (null == expression || "".equals(expression)) return;
@@ -673,12 +724,25 @@ public class CalculatorWindow extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Update the screen from a history entry
+     *
+     * @param entry non null instance of {@link HistoryEntry}
+     */
     private void onChooseFromHistory(HistoryEntry entry) {
         clear();
         appendText(entry.getExpression());
         result.setText(entry.getResult().toString());
     }
 
+    /**
+     * Load a font from resource folder
+     *
+     * @param format font format as available in {@link Font}
+     * @param file name of resource file
+     * @return an instance of {@link Font} or {@literal null} if
+     *          fail to load
+     */
     public static Font loadFont(int format, String file) {
         try {
             InputStream in = ClassLoader.getSystemResourceAsStream(file);
@@ -692,10 +756,6 @@ public class CalculatorWindow extends javax.swing.JFrame {
     }
 
     public static void main(String args[]) {
-        Font font = loadFont(Font.TRUETYPE_FONT,"DancingScript-Bold.ttf");
-        if (null != font) {
-            UIManager.put("Button.font",font.deriveFont(Font.BOLD,24));
-        }
         new CalculatorWindow().setVisible(true);
     }
 

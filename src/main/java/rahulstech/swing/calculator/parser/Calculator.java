@@ -1,3 +1,18 @@
+/**
+ * Copyright 2021 rahulstech
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package rahulstech.swing.calculator.parser;
 
 import rahulstech.swing.calculator.parser.operation.*;
@@ -14,6 +29,11 @@ import static rahulstech.swing.calculator.parser.TokenType.NUMERIC;
 import static rahulstech.swing.calculator.parser.operation.Operation.Priority.ADDITIVE;
 import static rahulstech.swing.calculator.parser.operation.Operation.Priority.MULTIPLICATIVE;
 
+/**
+ * This class performs evaluating an expression and
+ *
+ * @author Rahul Bagchi
+ */
 public class Calculator {
 
     private Map<String,Operation> operations = new HashMap<>();
@@ -28,6 +48,12 @@ public class Calculator {
         registerDefaultOperations();
     }
 
+    /**
+     * Register a new {@link Operation Operation}
+     *
+     * @param operation the operation
+     * @throws CalculatorException if operation with same name already available
+     */
     public void registerOperation(Operation operation) throws CalculatorException {
         if (null == operation) {
             throw new NullPointerException("operation == null");
@@ -42,6 +68,12 @@ public class Calculator {
         names.add(name);
     }
 
+    /**
+     * Unregister an {@link Operation Operation}
+     *
+     * @param name name of the operation
+     * @throws CalculatorException if no operation registered with the name
+     */
     public void unregisterOperation(String name) throws CalculatorException {
         if (null == name) {
             throw new NullPointerException("name == null");
@@ -56,6 +88,13 @@ public class Calculator {
         names.remove(name);
     }
 
+    /**
+     * Evaluates the given expression
+     *
+     * @param expression to evaluate
+     * @return the result
+     * @throws CalculatorException any exception during parsing and evaluating
+     */
     public BigDecimal calculate(String expression) throws CalculatorException {
         Tokenizer tokenizer = new Tokenizer(expression);
         this.tokens = tokenizer.tokenize();
@@ -66,16 +105,21 @@ public class Calculator {
         return result;
     }
 
+    /**
+     * Register basic operations provided by this class
+     */
     private void registerDefaultOperations() {
         priorityOperationNames.put(Operation.Priority.ADDITIVE,new ArrayList<>());
         priorityOperationNames.put(Operation.Priority.MULTIPLICATIVE,new ArrayList<>());
-        priorityOperationNames.put(Operation.Priority.NONE,new ArrayList<>());
 
         registerDefaultAdditiveOperators();
         registerDefaultMultiplicativeOperators();
         registerDefaultFunctions();
     }
 
+    /**
+     * Register operations with additive priority
+     */
     private void registerDefaultAdditiveOperators() {
         registerOperation(new BinaryOperator("+", Operation.Priority.ADDITIVE) {
             @Override
@@ -91,6 +135,9 @@ public class Calculator {
         });
     }
 
+    /**
+     * Register operations with multiplicative priority
+     */
     private void registerDefaultMultiplicativeOperators() {
         registerOperation(new BinaryOperator("*", Operation.Priority.MULTIPLICATIVE) {
             @Override
@@ -126,6 +173,9 @@ public class Calculator {
         });
     }
 
+    /**
+     * Register mathematical functions
+     */
     private void registerDefaultFunctions() {
         registerOperation(new UniFunction("SQRT",MULTIPLICATIVE) {
             @Override
@@ -161,10 +211,22 @@ public class Calculator {
         });
     }
 
+    /**
+     * Parse any type operation available just next
+     *
+     * @return evaluated value of the operation
+     * @throws ParseException thrown during parsing
+     */
     BigDecimal parseOperation() throws ParseException {
         return parseAdditiveOperation();
     }
 
+    /**
+     * Parse additive operation i.e. operations with additive priority
+     *
+     * @return evaluated value
+     * @throws ParseException thrown during parsing
+     */
     BigDecimal parseAdditiveOperation() throws ParseException {
         BigDecimal left = parseMultiplicativeOperation();
         List<String> names = priorityOperationNames.get(ADDITIVE);
@@ -184,6 +246,13 @@ public class Calculator {
         return root;
     }
 
+    /**
+     * Parse multiplicative operations i.e. operations with multiplicative
+     * priority
+     *
+     * @return evaluated value
+     * @throws ParseException thrown during parsing
+     */
     BigDecimal parseMultiplicativeOperation() throws ParseException {
         BigDecimal left = parseBaseOperation();
         List<String> names = priorityOperationNames.get(MULTIPLICATIVE);
@@ -201,7 +270,16 @@ public class Calculator {
         return root;
     }
 
+    /**
+     * Parse number literals, functions, operators, groups etc
+     *
+     * @return evaluated value
+     * @throws ParseException thrown during parsing
+     */
     BigDecimal parseBaseOperation() throws ParseException {
+        if (!hasToken(0)) {
+            throw new ParseException("no more token available");
+        }
         if (check("+",NUMERIC) || check("-",NUMERIC)) {
             Token sign = pop();
             BigDecimal number = new BigDecimal(pop().literal());
@@ -277,6 +355,16 @@ public class Calculator {
         return index+offset < tokenCount;
     }
 
+    /**
+     * Get token at offset distance from current position, if available.
+     * 0 -> current token
+     * < 0 -> token before current position
+     * > 0 -> token after current position
+     *
+     * @param offset
+     * @return the token
+     * @throws IndexOutOfBoundsException if no token availble
+     */
     private Token peek(int offset) {
         int at = index+offset;
         if (at >= tokenCount) {
@@ -286,12 +374,20 @@ public class Calculator {
         return tokens.get(at);
     }
 
+    /**
+     * Get the next token and increase the cursor current by one
+     *
+     * @return next token
+     */
     private Token pop() {
         Token token = tokens.get(index);
         index++;
         return token;
     }
 
+    /**
+     * Increase the parser current postion by one
+     */
     private void advance() {
         int newIndex = index+ 1;
         if (newIndex < 0 || newIndex > tokenCount) {
